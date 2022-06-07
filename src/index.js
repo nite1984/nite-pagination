@@ -1,29 +1,108 @@
 /**
- * nitePagination
- * V1.0 2022/06/04
+ * NitePagination
+ * v1.0.1 2022/06/07
  * https://github.com/nite1984/nite-pagination
  * 
  * Released under the MIT License
  */
-const nitePagination = (function (options) {
+const NitePagination = (function () {
     'use strict';
 
-    const defaults = {
-        containerSelector: null,
-        pageSelectCallback: null,
-        maxPages: 0,
-        alwaysShow: true,
-        prevPages: 3,
-        nextPages: 3,
-    };
-
-    const settings = Object.assign({}, defaults, options);
-    let curPage = 1;
-    let paginationUl;
-
     /**/
-    const init = function () {
+    const Constructor = function (options) {
 
+        const defaults = {
+            containerSelector: null,
+            pageSelectCallback: null,
+            maxPages: 0,
+            alwaysShow: true,
+            prevPages: 3,
+            nextPages: 3,
+        };
+
+        const settings = Object.assign({}, defaults, options);
+        let curPage = 1;
+        let paginationUl;
+
+        /**/
+        const renderPagination = function () {
+
+            paginationUl.innerHTML = '';
+
+            if (!settings.maxPages) {
+                return;
+            }
+
+            const firstPageLink = makePageElement('&#8592;', 1);
+            const prevLink = makePageElement('&laquo;', curPage - 1);
+            const nextLink = makePageElement('&raquo;', curPage + 1);
+            const lastPageLink = makePageElement('&#8594;', settings.maxPages);
+
+            let prevPages = [];
+            for (let i = curPage - 1; i > 0 && prevPages.length + 1 <= settings.prevPages; i--) {
+                prevPages.push(makePageElement(i, i));
+            }
+
+            let nextPages = [];
+            for (let i = curPage + 1; i <= settings.maxPages && nextPages.length + 1 <= settings.nextPages; i++) {
+                nextPages.push(makePageElement(i, i));
+            }
+
+            paginationUl.appendChild(firstPageLink);
+            paginationUl.appendChild(prevLink);
+
+            prevPages = prevPages.reverse();
+            for (let i = 0; i < prevPages.length; i++) {
+                paginationUl.appendChild(prevPages[i]);
+            }
+
+            paginationUl.appendChild(makePageElement(curPage, curPage));
+
+            for (let i = 0; i < nextPages.length; i++) {
+                paginationUl.appendChild(nextPages[i]);
+            }
+
+            paginationUl.appendChild(nextLink);
+            paginationUl.appendChild(lastPageLink);
+        }
+
+        /**/
+        const makePageElement = function (label, page) {
+
+            let li = document.createElement('li');
+            li.classList.add('page-item');
+
+            if (page === curPage && parseInt(label)) {
+                li.classList.add('active');
+            }
+
+            if (page < 1 || page > settings.maxPages || (!parseInt(label) && curPage === page)) {
+                li.classList.add('disabled');
+            }
+
+            let a = document.createElement('a');
+            a.classList.add('page-link');
+            a.href = '#';
+            a.dataset.page = page;
+            a.innerHTML = label;
+
+            li.appendChild(a);
+
+            return li;
+        }
+
+        /**/
+        const setCurrentPage = function (page) {
+            curPage = parseInt(page);
+
+            if (settings.pageSelectCallback !== null && typeof settings.pageSelectCallback === 'function') {
+                settings.pageSelectCallback(curPage);
+            }
+        }
+
+        /**
+         * INIT
+         */
         const paginationContainer = document.querySelector(settings.containerSelector);
 
         if (!paginationContainer) {
@@ -46,105 +125,28 @@ const nitePagination = (function (options) {
                 renderPagination();
             }
         }, false);
-    }
 
-    /**/
-    const renderPagination = function () {
+        /**
+         * Public Interface
+         */
+        const publicAPIs = {};
 
-        paginationUl.innerHTML = '';
-
-        if (!settings.maxPages) {
-            return;
+        /**/
+        publicAPIs.getCurrentPage = function () {
+            return curPage;
         }
 
-        const firstPageLink = makePageElement('&#8592;', 1);
-        const prevLink = makePageElement('&laquo;', curPage - 1);
-        const nextLink = makePageElement('&raquo;', curPage + 1);
-        const lastPageLink = makePageElement('&#8594;', settings.maxPages);
-
-        let prevPages = [];
-        for (let i = curPage - 1; i > 0 && prevPages.length + 1 <= settings.prevPages; i--) {
-            prevPages.push(makePageElement(i, i));
+        /**/
+        publicAPIs.setMaxPages = function (maxPages) {
+            settings.maxPages = parseInt(maxPages);
+            setCurrentPage(1);
+            renderPagination();
         }
 
-        let nextPages = [];
-        for (let i = curPage + 1; i <= settings.maxPages && nextPages.length + 1 <= settings.nextPages; i++) {
-            nextPages.push(makePageElement(i, i));
-        }
+        return publicAPIs;
+    };
 
-        paginationUl.appendChild(firstPageLink);
-        paginationUl.appendChild(prevLink);
+    return Constructor;
+})();
 
-        prevPages = prevPages.reverse();
-        for (let i = 0; i < prevPages.length; i++) {
-            paginationUl.appendChild(prevPages[i]);
-        }
-
-        paginationUl.appendChild(makePageElement(curPage, curPage));
-
-        for (let i = 0; i < nextPages.length; i++) {
-            paginationUl.appendChild(nextPages[i]);
-        }
-
-        paginationUl.appendChild(nextLink);
-        paginationUl.appendChild(lastPageLink);
-    }
-
-    /**/
-    const makePageElement = function (label, page) {
-
-        let li = document.createElement('li');
-        li.classList.add('page-item');
-
-        if (page === curPage && parseInt(label)) {
-            li.classList.add('active');
-        }
-
-        if (page < 1 || page > settings.maxPages || (!parseInt(label) && curPage === page)) {
-            li.classList.add('disabled');
-        }
-
-        let a = document.createElement('a');
-        a.classList.add('page-link');
-        a.href = '#';
-        a.dataset.page = page;
-        a.innerHTML = label;
-
-        li.appendChild(a);
-
-        return li;
-    }
-
-    /**/
-    const setCurrentPage = function (page) {
-        curPage = parseInt(page);
-
-        if (settings.pageSelectCallback !== null && typeof settings.pageSelectCallback === 'function') {
-            settings.pageSelectCallback(curPage);
-        }
-    }
-
-    init();
-
-    /**
-     * PUBLIC INTERFACE
-     */
-    const publicAPIs = {};
-
-    /**/
-    publicAPIs.getCurrentPage = function () {
-        return curPage;
-    }
-
-    /**/
-    publicAPIs.setMaxPages = function (maxPages) {
-        settings.maxPages = parseInt(maxPages);
-        setCurrentPage(1);
-        renderPagination();
-    }
-
-    return publicAPIs;
-
-});
-
-module.exports = nitePagination;
+module.exports = NitePagination;

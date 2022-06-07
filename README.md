@@ -7,15 +7,15 @@ npm i @nite1984/nite-pagination
 ```
 
 ```
-import nitePagination from '@nite1984/nite-pagination';
+import NitePagination from '@nite1984/nite-pagination';
 
-window.nitePagination = nitePagination;
+window.NitePagination = NitePagination;
 ```
 
 # Usage
 
 ```
-const pagination = nitePagination({
+const pagination = new NitePagination({
     containerSelector: '#pagination',
     pageSelectCallback: (page) => {
         console.log(page);
@@ -25,7 +25,7 @@ const pagination = nitePagination({
 ```
 
 ```
-const pagination = nitePagination({
+const pagination = new NitePagination({
     containerSelector: '#pagination',
     pageSelectCallback: (page) => {
         console.log(page);
